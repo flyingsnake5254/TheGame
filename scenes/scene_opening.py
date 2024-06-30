@@ -1,16 +1,15 @@
 import pygame
 import sys
 from colors import BLACK, WHITE
-
-from const import WINDOW_SIZE
+from const import WINDOW, WINDOW_SIZE
 from util.fade import Fade
 
 class SceneOpening():
   def __init__(self):
-    pygame.init()
-    self.screen = pygame.display.set_mode(WINDOW_SIZE)
+    self.manager = None
+    print('SceneOpening')
 
-    # font
+    # 字體
     self.font = pygame.font.Font('fonts/content.ttf', 36)
 
     # 開場文字
@@ -31,8 +30,8 @@ class SceneOpening():
 
     # 顯示的儲列
     self.show_function = [
-      ['', lambda: self.screen.fill(BLACK)],
-      ['show_text', lambda: self.screen.blit(self.dynamic_objects['opening_text'], self.dynamic_objects['opening_text_rect'])]
+      ['', lambda: WINDOW.fill(BLACK)],
+      ['show_text', lambda: WINDOW.blit(self.dynamic_objects['opening_text'], self.dynamic_objects['opening_text_rect'])]
     ]
 
     # 淡入畫面
@@ -45,30 +44,38 @@ class SceneOpening():
       ]
     )
 
-
+  def run(self):
     self.running = True
     while self.running:
       for event in pygame.event.get():
         # 退出遊戲
         if event.type == pygame.QUIT:
           self.running = False
-        #點擊滑鼠右鍵
+          # 退出 Pygame
+          pygame.quit()
+          sys.exit()
+
+        # 點擊滑鼠右鍵
         if event.type == pygame.MOUSEBUTTONDOWN:
           self.current_contents += 1
-          self.show_function.append(
-            [
-              'click_contents',
-              Fade.fadeout_then_fadein,
-              (
-                self.show_function,
-                self.dynamic_objects,
-                self.font.render(self.contents[self.current_contents], True, WHITE),
-                'opening_text',
-                'opening_text_rect',
-                'click_contents'
-              )
-            ]
-          )
+          if self.current_contents >= len(self.contents):
+            self.running = False
+          else:
+            self.show_function.append(
+              [
+                'click_contents',
+                Fade.fadeout_then_fadein,
+                (
+                  self.show_function,
+                  self.dynamic_objects,
+                  self.font.render(self.contents[self.current_contents], True, WHITE),
+                  (self.font.render(self.contents[self.current_contents], True, WHITE)).get_rect(center=(WINDOW_SIZE[0] // 2 , WINDOW_SIZE[1] // 2)),
+                  'opening_text',
+                  'opening_text_rect',
+                  'click_contents'
+                )
+              ]
+            )
       
       # 顯示物件
       for func in self.show_function:
@@ -80,9 +87,4 @@ class SceneOpening():
       # 更新畫面
       pygame.display.flip()
     
-    # 退出 Pygame
-    pygame.quit()
-    sys.exit()
-
-
-
+    self.manager.next_scene()

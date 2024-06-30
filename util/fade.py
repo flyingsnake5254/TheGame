@@ -11,10 +11,8 @@ class Fade:
   def fadein_then_fadeout():
     pass
 
-  
-
   @staticmethod
-  def fadeout_then_fadein(show_function, dynamic_objects, new_object, obj_tag, obj_rect_tag, function_tag, speed=1):
+  def fadeout_then_fadein(show_function, dynamic_objects, new_object, new_object_rect, obj_tag, obj_rect_tag, function_tag, speed=1):
     if function_tag in Fade.states.keys():
       if Fade.states[function_tag] == 'fadeout':
         alpha = dynamic_objects[obj_tag].get_alpha() - speed
@@ -23,7 +21,7 @@ class Fade:
         else:
           new_object.set_alpha(0)
           dynamic_objects[obj_tag] = new_object
-          dynamic_objects[obj_rect_tag] = new_object.get_rect(center=(WINDOW_SIZE[0] // 2, WINDOW_SIZE[1] // 2))
+          dynamic_objects[obj_rect_tag] = new_object_rect
           Fade.states[function_tag] = 'fadein'
       elif Fade.states[function_tag] == 'fadein':
         alpha = dynamic_objects[obj_tag].get_alpha() + speed
@@ -37,14 +35,8 @@ class Fade:
             if func[0] == function_tag:
               show_function.remove(func)
               break
-
-
-
     else:
       Fade.states[function_tag] = 'fadeout'
-
-
-
 
   @staticmethod
   def fadein(show_function, dynamic_objects, object_tag, function_tag, speed=1):
@@ -61,20 +53,6 @@ class Fade:
           show_function.remove(func)
           break
 
-
-      
-        
-          
-  '''
-[淡出]
-參數：
-{
-  'ui_obj': None,
-  'obj_tag': None,
-  'speed': None,
-  'fade_tag': None
-}
-  '''
   @staticmethod
   def fadeout(args):
     for obj in args['ui_obj']:
