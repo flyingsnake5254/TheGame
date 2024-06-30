@@ -1,0 +1,3 @@
+更改螢幕縮放
+  檔案位置：const.py
+  變數：SCALE_FACTOR
