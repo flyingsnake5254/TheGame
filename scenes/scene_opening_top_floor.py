@@ -2,6 +2,7 @@ import pygame
 import sys
 from colors import BLACK, TEXT_BG, WHITE
 from const import WINDOW, WINDOW_SIZE
+from util.fade import Fade
 from util.text_with_background import TextWithBackground
 
 class SceneOpeningTopFloor():
@@ -40,12 +41,10 @@ class SceneOpeningTopFloor():
 
     self.current_contents = 0
 
-    self.text = self.font.render(self.contents[self.current_contents], True, WHITE, TEXT_BG)
-    self.text_rect = self.text.get_rect(center=(WINDOW_SIZE[0] // 2, WINDOW_SIZE[1] - 100))
-
     # 動態物件
     self.dynamic_objects = {
-      'text': TextWithBackground(self.contents[self.current_contents], WHITE, TEXT_BG, self.font),
+      'text': TextWithBackground(self.contents[self.current_contents], WHITE, TEXT_BG, self.font).surface,
+      'text_rect': TextWithBackground(self.contents[self.current_contents], WHITE, TEXT_BG, self.font).surface.get_rect(center=(WINDOW_SIZE[0] // 2, WINDOW_SIZE[1] - 100)),
       'image': self.contents_background[self.current_contents],
       'image_rect': self.contents_background[self.current_contents].get_rect(center=(WINDOW_SIZE[0] // 2, WINDOW_SIZE[1] // 2))
     }
@@ -53,12 +52,20 @@ class SceneOpeningTopFloor():
     # 顯示的儲列
     self.show_function = [
       ['', lambda: WINDOW.blit(self.dynamic_objects['image'], self.dynamic_objects['image_rect'])],
-      ['', lambda: self.dynamic_objects['text'].draw(WINDOW, (WINDOW_SIZE[0] // 2, WINDOW_SIZE[1] - 100))]
+      ['', lambda: WINDOW.blit(self.dynamic_objects['text'], self.dynamic_objects['text_rect'])],
     ]
+
+    self.show_function.append(
+      [
+        'window_fadein',
+        lambda: Fade.window_fadein(self.show_function, 'window_fadein')
+      ]
+    )
 
   def run(self):
     self.running = True
     while self.running:
+      # print(len(self.show_function))
       for event in pygame.event.get():
         # 退出遊戲
         if event.type == pygame.QUIT:
@@ -68,15 +75,40 @@ class SceneOpeningTopFloor():
           sys.exit()
 
         if event.type == pygame.MOUSEBUTTONDOWN:
-          self.current_contents += 1
-          self.dynamic_objects['text'] = TextWithBackground(self.contents[self.current_contents], WHITE, TEXT_BG, self.font)
-          self.dynamic_objects['image'] = self.contents_background[self.current_contents]
-          self.dynamic_objects['image_rect'] = self.dynamic_objects['image'].get_rect(center=(WINDOW_SIZE[0] // 2, WINDOW_SIZE[1] // 2))
-      
+          isFading = False
+          for func in self.show_function:
+            if 'fade' in func[0]:
+              isFading = True
+              break
+          if not isFading:
+            self.current_contents += 1
+            # self.dynamic_objects['text'] = TextWithBackground(self.contents[self.current_contents], WHITE, TEXT_BG, self.font).surface
+            # self.dynamic_objects['text_rect'] = TextWithBackground(self.contents[self.current_contents], WHITE, TEXT_BG, self.font).surface.get_rect(center=(WINDOW_SIZE[0] // 2, WINDOW_SIZE[1] - 100))
+            # self.dynamic_objects['image'] = self.contents_background[self.current_contents]
+            # self.dynamic_objects['image_rect'] = self.dynamic_objects['image'].get_rect(center=(WINDOW_SIZE[0] // 2, WINDOW_SIZE[1] // 2))
+            self.show_function.append(
+              [
+                'click_window_fadeout_then_fadein',
+                lambda: Fade.window_fadeout_then_fadein(
+                  self.show_function,
+                  self.dynamic_objects,
+                  {
+                    'text': TextWithBackground(self.contents[self.current_contents], WHITE, TEXT_BG, self.font).surface,
+                    'text_rect': TextWithBackground(self.contents[self.current_contents], WHITE, TEXT_BG, self.font).surface.get_rect(center=(WINDOW_SIZE[0] // 2, WINDOW_SIZE[1] - 100)),
+                    'image': self.contents_background[self.current_contents],
+                    'image_rect': self.dynamic_objects['image'].get_rect(center=(WINDOW_SIZE[0] // 2, WINDOW_SIZE[1] // 2))
+                  },
+                  'click_window_fadeout_then_fadein',
+                  5
+                )
+              ]
+            )
+        
       # 顯示物件
       for func in self.show_function:
         if len(func) == 2:
           func[1]()
+            
         elif len(func) == 3:
           func[1](*func[2])
 

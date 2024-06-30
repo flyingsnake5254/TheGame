@@ -1,8 +1,11 @@
-from const import WINDOW_SIZE
-
+from colors import OVERLAY_BLACK
+from const import WINDOW, WINDOW_SIZE
+import pygame
 
 class Fade:
   states = {}
+  overlay = pygame.Surface(WINDOW_SIZE, pygame.SRCALPHA)
+  overlay.fill(OVERLAY_BLACK)
 
   def __init__(self):
     pass
@@ -54,26 +57,94 @@ class Fade:
           break
 
   @staticmethod
-  def fadeout(args):
-    for obj in args['ui_obj']:
-      if obj['tag'] == args['obj_tag']:
-        alpha = obj['object'].get_alpha()
+  def fadeout(show_function, dynamic_objects, object_tag, function_tag, speed=1):
+    alpha = dynamic_objects[object_tag].get_alpha() - speed
+    if alpha > 0:
+      dynamic_objects[object_tag].set_alpha(alpha)
 
-        # 進行淡出
+    # 完成淡入
+    else:
+      dynamic_objects[object_tag].set_alpha(0)
+      # 移除 show function 裡面的 fadein function
+      for func in show_function:
+        if func[0] == function_tag:
+          show_function.remove(func)
+          break
 
+  @staticmethod
+  def window_fadein(show_function, function_tag, speed=1):
+    start_fadein = False
+    for func in show_function:
+      if func[0] == function_tag:
+        start_fadein = True
+        break
+    
+    if start_fadein:
+      alpha = Fade.overlay.get_alpha() - speed
+      if alpha > 0:
+        Fade.overlay.set_alpha(alpha)
+        WINDOW.blit(Fade.overlay, (0, 0))
+      else:
+        Fade.overlay.set_alpha(0)
+        WINDOW.blit(Fade.overlay, (0, 0))
+        for func in show_function:
+          if func[0] == function_tag:
+            show_function.remove(func)
+    else:
+      Fade.overlay.set_alpha(255)
+
+  @staticmethod
+  def window_fadeout(show_function, function_tag, speed=1):
+    start_fadeout = False
+    for func in show_function:
+      if func[0] == function_tag:
+        start_fadeout = True
+        break
+    
+    if start_fadeout:
+      alpha = Fade.overlay.get_alpha() + speed
+      if alpha < 255:
+        Fade.overlay.set_alpha(alpha)
+        WINDOW.blit(Fade.overlay, (0, 0))
+      else:
+        Fade.overlay.set_alpha(255)
+        WINDOW.blit(Fade.overlay, (0, 0))
+        for func in show_function:
+          if func[0] == function_tag:
+            show_function.remove(func)
+    else:
+      Fade.overlay.set_alpha(255)
+
+  @staticmethod
+  def window_fadeout_then_fadein(show_function, dynamic_objects, change_object, function_tag, speed=1):
+    if function_tag in Fade.states.keys():
+      if Fade.states[function_tag] == 'window_fadeout':
+        alpha = Fade.overlay.get_alpha() + speed
+        if alpha < 255:
+          Fade.overlay.set_alpha(alpha)
+          WINDOW.blit(Fade.overlay, (0, 0))
+        else:
+          Fade.overlay.set_alpha(255)
+          WINDOW.blit(Fade.overlay, (0, 0))
+          # 更新物件
+          for key in change_object.keys():
+            dynamic_objects[key] = change_object[key]
+          # 更新 state
+          Fade.states[function_tag] = 'window_fadein'
+      elif Fade.states[function_tag] == 'window_fadein':
+        alpha = Fade.overlay.get_alpha() - speed
         if alpha > 0:
-          alpha = alpha - args['speed']
-          # 完成淡出
-          if alpha <= 0:
-            obj['object'].set_alpha(0)
-            # 移除 fade out 方法
-            function_index = -1
-            for i in range(len(args['ui_obj'])):
-              if args['ui_obj'][i]['tag'] == args['fade_tag']:
-                function_index = i
-                break
-            if function_index != -1:
-              args['ui_obj'].pop(function_index)
-              break
-          else:
-            obj['object'].set_alpha(alpha)
+          Fade.overlay.set_alpha(alpha)
+          WINDOW.blit(Fade.overlay, (0, 0))
+        else:
+          Fade.overlay.set_alpha(0)
+          WINDOW.blit(Fade.overlay, (0, 0))
+          # 移除 show function 
+          for func in show_function:
+            if func[0] == function_tag:
+              show_function.remove(func)
+          # 移除 state
+          del Fade.states[function_tag]
+    else:
+      Fade.states[function_tag] = 'window_fadeout'
+      Fade.overlay.set_alpha(0)

@@ -38,9 +38,9 @@ class SceneOpening():
     self.text.set_alpha(0)
     self.show_function.append(
       [
-        'opening_fadein', 
+        'fade', 
         Fade.fadein, 
-        (self.show_function, self.dynamic_objects, 'opening_text', 'opening_fadein')
+        (self.show_function, self.dynamic_objects, 'opening_text', 'fade')
       ]
     )
 
@@ -57,25 +57,39 @@ class SceneOpening():
 
         # 點擊滑鼠右鍵
         if event.type == pygame.MOUSEBUTTONDOWN:
-          self.current_contents += 1
-          if self.current_contents >= len(self.contents):
-            self.running = False
-          else:
-            self.show_function.append(
-              [
-                'click_contents',
-                Fade.fadeout_then_fadein,
-                (
-                  self.show_function,
-                  self.dynamic_objects,
-                  self.font.render(self.contents[self.current_contents], True, WHITE),
-                  (self.font.render(self.contents[self.current_contents], True, WHITE)).get_rect(center=(WINDOW_SIZE[0] // 2 , WINDOW_SIZE[1] // 2)),
-                  'opening_text',
-                  'opening_text_rect',
-                  'click_contents'
-                )
-              ]
-            )
+          isFading = False
+          for func in self.show_function:
+            if func[0] == 'fade':
+              isFading = True
+          if not isFading:
+            self.current_contents += 1
+            if self.current_contents >= len(self.contents):
+              # 淡出畫面
+              self.text.set_alpha(255)
+              self.show_function.append(
+                [
+                  'fade', 
+                  Fade.fadeout, 
+                  (self.show_function, self.dynamic_objects, 'opening_text', 'fade')
+                ]
+              )
+
+            else:
+              self.show_function.append(
+                [
+                  'fade',
+                  Fade.fadeout_then_fadein,
+                  (
+                    self.show_function,
+                    self.dynamic_objects,
+                    self.font.render(self.contents[self.current_contents], True, WHITE),
+                    (self.font.render(self.contents[self.current_contents], True, WHITE)).get_rect(center=(WINDOW_SIZE[0] // 2 , WINDOW_SIZE[1] // 2)),
+                    'opening_text',
+                    'opening_text_rect',
+                    'fade'
+                  )
+                ]
+              )
       
       # 顯示物件
       for func in self.show_function:
@@ -84,7 +98,18 @@ class SceneOpening():
         elif len(func) == 3:
           func[1](*func[2])
 
+      # 結束淡出
+      if self.current_contents >= len(self.contents):
+        finish_fadeout = True
+        for func in self.show_function:
+          if func[0] == 'fade':
+            finish_fadeout = False
+            break
+        if finish_fadeout:
+          self.running = False
+        
+
       # 更新畫面
       pygame.display.flip()
     
-    self.manager.next_scene()
+    self.manager.next_scene(delay=2)

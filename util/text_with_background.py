@@ -16,8 +16,4 @@ class TextWithBackground:
 
     self.surface.fill(self.bg_color)
     self.surface.blit(text_surface, (self.padding, self.padding))
-    self.rect = self.surface.get_rect()
 
-  def draw(self, screen, position):
-    self.rect.center = position
-    screen.blit(self.surface, self.rect)
