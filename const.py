@@ -8,7 +8,7 @@ import pygame
 WINDOW_TITLE = '聽說是遊戲'
 
 # 縮放比例
-SCALE_FACTOR = 0.5
+SCALE_FACTOR = 0.35
 
 # 視窗寬高
 WINDOW_WIDTH = 4096
