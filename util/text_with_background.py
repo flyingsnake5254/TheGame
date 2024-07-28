@@ -1,7 +1,7 @@
 import pygame
 
 class TextWithBackground:
-  def __init__(self, text, text_color, bg_color, font, padding=20):
+  def __init__(self, text, text_color, bg_color, font, padding=5):
     self.text = text
     self.text_color = text_color
     self.bg_color = bg_color
